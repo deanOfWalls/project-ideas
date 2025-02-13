@@ -1,0 +1,18 @@
+.
+├── discord_pgp.md
+├── discordWarning.md
+├── email-magic-link.md
+├── generate-index.sh
+├── .github
+├── land-ownership-tracking.md
+├── md-to-pdf.md
+├── missing-persons.md
+├── mneme-local-design-doc.md
+├── project_structure.txt
+├── to-do-list.md
+├── workforce-manager-automation.md
+├── workforce-manager-sql-demo.md
+├── work-log-gui-calendar.md
+└── youtube-summarizer.md
+
+1 directory, 15 files
