@@ -6,6 +6,7 @@ Mneme is a personal memory capture system designed to run locally on an Arch Lin
 ## Goals
 - Always-on, low-impact background process.
 - Hotword-activated recording to minimize resource usage and unnecessary recording.
+- Voice Activity Detection (VAD) to automatically stop recording when silence is detected.
 - Local transcription using Whisper for privacy and control.
 - Memory storage in a local, user-friendly format (e.g., Markdown/Obsidian-compatible).
 
@@ -18,17 +19,18 @@ Mneme is a personal memory capture system designed to run locally on an Arch Lin
 | Component                   | Tool                     |
 |-----------------------------|---------------------------|
 | Hotword Detection           | Porcupine (local)         |
-| Audio Capture               | arecord (ALSA) or ffmpeg |
+| Audio Capture + VAD         | sox (with silence detection) or ffmpeg |
 | Transcription               | Whisper (CPU/GPU)         |
 | Memory Storage              | Markdown files / Obsidian |
+| Automation + Sync           | Git + GitHub Actions      |
 
 ## System Workflow
 1. **Always-Listening Hotword Detection:**
    - Porcupine listens for the hotword (e.g., "jì de").
    - When detected, trigger audio recording.
 
-2. **Audio Recording:**
-   - Use `arecord` to record 10-30 seconds of audio (configurable).
+2. **Audio Recording with VAD:**
+   - Use `sox` or `ffmpeg` with silence detection to record audio until silence is detected.
    - Store the audio in a temporary WAV file.
 
 3. **Transcription:**
@@ -36,8 +38,12 @@ Mneme is a personal memory capture system designed to run locally on an Arch Lin
    - Use `whisper.cpp` for CPU or `whisper` with ROCm for GPU acceleration.
 
 4. **Memory Storage:**
-   - Append the transcription text to a daily Markdown file (e.g., `YYYY-MM-DD.md`).
+   - Append the transcription text to a timestamped Markdown file (e.g., `YYYY-MM-DD_HH-MM-SS.md`).
    - Store files in a directory (e.g., `~/Mneme_Memories/`).
+
+5. **Git Sync + Index Update:**
+   - Push new memory files to a GitHub repository.
+   - Trigger a GitHub Actions workflow to update an `index.html` page listing all `.md` files.
 
 ## Detailed Implementation
 ### Hotword Detection
@@ -57,9 +63,9 @@ while True:
         # Trigger audio recording
 ```
 
-### Audio Recording
+### Audio Recording with VAD
 ```bash
-arecord -f cd -t wav -d 15 memory.wav
+sox -t alsa default memory.wav silence 1 0.1 1% 1 1.0 1%
 ```
 
 ### Transcription
@@ -76,14 +82,56 @@ whisper memory.wav --model base --device cuda
 
 ### Memory Storage
 ```bash
-cat memory.txt >> ~/Mneme_Memories/$(date +%F).md
+DATE=$(date +"%Y-%m-%d_%H-%M-%S")
+mv memory.txt ~/Mneme_Memories/"$DATE.md"
+```
+
+### Git Sync + Index Update
+Local push script example:
+```bash
+cd ~/Mneme_Memories
+if [[ -n $(git status --porcelain) ]]; then
+    git add *.md
+    git commit -m "Add new memory files"
+fi
+if [[ -n $(git log origin/main..HEAD) ]]; then
+    git push origin main
+fi
+```
+GitHub Actions workflow example:
+```yaml
+name: Build Index
+on:
+  push:
+    branches:
+      - main
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Generate index.html
+        run: |
+          echo "<html><body>" > index.html
+          for file in *.md; do
+            echo "<p><a href=\"$file\">$file</a></p>" >> index.html
+          done
+          echo "</body></html>" >> index.html
+      - name: Commit and Push index.html
+        run: |
+          git config --global user.name 'github-actions'
+          git config --global user.email 'actions@github.com'
+          git add index.html
+          git commit -m "Update index.html"
+          git push
 ```
 
 ## Directory Structure
 ```
 ~/Mneme_Memories/
-    2025-02-13.md
-    2025-02-14.md
+    2025-02-13_12-45-32.md
+    2025-02-14_08-22-11.md
+    index.html
 ```
 
 ## Performance Considerations
@@ -92,8 +140,7 @@ cat memory.txt >> ~/Mneme_Memories/$(date +%F).md
 - Enable **GPU acceleration (ROCm)** for faster transcription on larger models if needed.
 
 ## Future Enhancements
-- Implement **Voice Activity Detection (VAD)** to **automatically stop recording** when silence is detected.
-- Build **a local TUI or GUI** to **browse, search, and tag memories**.
+- Implement **a local TUI or GUI** to **browse, search, and tag memories**.
 - Explore **embedding metadata (timestamps, tags)** into memory files.
 - Integrate with **Obsidian** for advanced note management.
 
