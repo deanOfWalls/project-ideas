@@ -1,28 +1,80 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Project Ideas</title>
     <link rel="stylesheet" href="style.css">
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
 </head>
+
 <body>
     <h1>Project Ideas</h1>
     <ul>
-        <li><a href="README.md">README.md</a></li>
-        <li><a href="discordWarning.md">discordWarning.md</a></li>
-        <li><a href="discord_pgp.md">discord_pgp.md</a></li>
-        <li><a href="email-magic-link.md">email-magic-link.md</a></li>
-        <li><a href="land-ownership-tracking.md">land-ownership-tracking.md</a></li>
-        <li><a href="md-to-pdf.md">md-to-pdf.md</a></li>
-        <li><a href="missing-persons.md">missing-persons.md</a></li>
-        <li><a href="mneme-local-design-doc.md">mneme-local-design-doc.md</a></li>
-        <li><a href="test.md">test.md</a></li>
-        <li><a href="to-do-list.md">to-do-list.md</a></li>
-        <li><a href="work-log-gui-calendar.md">work-log-gui-calendar.md</a></li>
-        <li><a href="workforce-manager-automation.md">workforce-manager-automation.md</a></li>
-        <li><a href="workforce-manager-sql-demo.md">workforce-manager-sql-demo.md</a></li>
-        <li><a href="youtube-summarizer.md">youtube-summarizer.md</a></li>
+        <li><a href="#" class="md-link" data-src="discordWarning.md">discordWarning.md</a></li>
+        <li><a href="#" class="md-link" data-src="discord_pgp.md">discord_pgp.md</a></li>
+        <li><a href="#" class="md-link" data-src="email-magic-link.md">email-magic-link.md</a></li>
+        <li><a href="#" class="md-link" data-src="land-ownership-tracking.md">land-ownership-tracking.md</a></li>
+        <li><a href="#" class="md-link" data-src="md-to-pdf.md">md-to-pdf.md</a></li>
+        <li><a href="#" class="md-link" data-src="missing-persons.md">missing-persons.md</a></li>
+        <li><a href="#" class="md-link" data-src="mneme-local-design-doc.md">mneme-local-design-doc.md</a></li>
+        <li><a href="#" class="md-link" data-src="test.md">test.md</a></li>
+        <li><a href="#" class="md-link" data-src="to-do-list.md">to-do-list.md</a></li>
+        <li><a href="#" class="md-link" data-src="work-log-gui-calendar.md">work-log-gui-calendar.md</a></li>
+        <li><a href="#" class="md-link" data-src="workforce-manager-automation.md">workforce-manager-automation.md</a></li>
+        <li><a href="#" class="md-link" data-src="workforce-manager-sql-demo.md">workforce-manager-sql-demo.md</a></li>
+        <li><a href="#" class="md-link" data-src="youtube-summarizer.md">youtube-summarizer.md</a></li>
     </ul>
+
+    <!-- Modal -->
+    <div id="modal" class="modal">
+        <div class="modal-content">
+            <span class="close-modal" onclick="closeModal()">&times;</span>
+            <div id="modal-body">Loading...</div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            const links = document.querySelectorAll(".md-link");
+
+            links.forEach(link => {
+                link.addEventListener("click", function (e) {
+                    e.preventDefault();
+                    openModal(link.getAttribute("data-src"));
+                });
+            });
+        });
+
+        function openModal(mdFile) {
+            const modal = document.getElementById("modal");
+            const modalBody = document.getElementById("modal-body");
+
+            modal.style.display = "block";
+            modalBody.innerHTML = "Loading...";
+
+            fetch(mdFile)
+                .then(response => response.text())
+                .then(data => {
+                    modalBody.innerHTML = marked.parse(data);
+                })
+                .catch(error => {
+                    modalBody.innerHTML = "<p style='color: red;'>Failed to load content: " + error + "</p>";
+                });
+        }
+
+        function closeModal() {
+            document.getElementById("modal").style.display = "none";
+        }
+
+        window.onclick = function (event) {
+            const modal = document.getElementById("modal");
+            if (event.target === modal) {
+                closeModal();
+            }
+        }
+    </script>
 </body>
+
 </html>
